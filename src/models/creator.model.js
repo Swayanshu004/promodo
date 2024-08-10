@@ -28,10 +28,6 @@ const creatorSchema = new Schema(
             type:  String,
             required: true
         },
-        profile: {
-            type: String,
-            required: true,
-        },
         colabHistory: [
             {
                 type: Schema.Types.ObjectId,
@@ -42,9 +38,6 @@ const creatorSchema = new Schema(
             type: String,
             required: [true , "password is required"],
         },
-        refreshToken: {
-            type: String,
-        }
     }
 )
 creatorSchema.pre("save" , async function(next){ 
@@ -55,28 +48,7 @@ creatorSchema.pre("save" , async function(next){
 })
 creatorSchema.methods.isPasswordCorrect = async function(password){
     return await bcrypt.compare(password , this.password)
-}   
-creatorSchema.methods.generateAccessToken = function(){
-    return jwt.sign({
-        _id: this._id,
-        email: this.email,
-        name: this.name,
-    },
-    process.env.ACCESS_TOKEN_SECRET,
-    {
-        expiresIn: process.env.ACCESS_TOKEN_EXPIRY
-    }
-)}
-creatorSchema.methods.generateRefreshToken = function(){
-    return jwt.sign({
-        _id: this._id,
-    },
-    process.env.REFRESH_TOKEN_SECRET,
-    {
-        expiresIn: process.env.REFRESH_TOKEN_EXPIRY
-
-    }
-)}
+}
 
 
 export const Creator = mongoose.model("Creator" , creatorSchema);
