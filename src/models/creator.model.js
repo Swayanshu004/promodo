@@ -1,5 +1,4 @@
-import mongoose, {Schema} from "mongoose";
-import jwt from "jsonwebtoken"
+import mongoose, {Schema} from "mongoose"
 import bcrypt from "bcrypt"
 
 const creatorSchema = new Schema(
@@ -8,11 +7,10 @@ const creatorSchema = new Schema(
             type: String,
             required: true
         },
-        email: {
+        address: {
             type: String,
             required: true,
             unique: true,
-            lowercase: true,
             trim:true
         },
         instagramUrl: {

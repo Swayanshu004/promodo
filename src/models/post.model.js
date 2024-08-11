@@ -13,7 +13,7 @@ const postSchema = new Schema({
         type: String,
     },
     category: {
-        //  Beuty, sports, tech, finanace... etc.
+        //  Beauty, sports, tech, finanace... etc.
         type: String,
         required: true
     }, 
@@ -43,4 +43,4 @@ const postSchema = new Schema({
     timestamps: true
 })
 
-export default Post = mongoose.model("Post", postSchema);
+export const Post = mongoose.model("Post", postSchema);
