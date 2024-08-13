@@ -40,5 +40,7 @@ router
             res.json({token});
         }
     })
+router
+    .
 
 export default router; 

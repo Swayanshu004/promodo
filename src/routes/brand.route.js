@@ -4,6 +4,7 @@ import {Post} from "../models/post.model.js"
 import { upload } from "../middlewares/multer.middlewares.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import jwt from "jsonwebtoken";
+import { authMiddlewareBrand } from "../middlewares/authorization.js";
 
 
 const router = express.Router();
@@ -21,7 +22,7 @@ router
         })
         if(existedBrand){
             const token = jwt.sign({
-                userId: existedBrand.id,
+                brandId: existedBrand.id,
             }, process.env.JWT_SECRET)
 
             res.json({token});
@@ -34,7 +35,7 @@ router
                 password
             })
             const token = jwt.sign({
-                userId: brand.id,
+                brandId: brand.id,
             }, process.env.JWT_SECRET)
 
             res.json({token});
@@ -74,5 +75,19 @@ router
         })
         res.json({post})
     })
-
+router
+    .get('/post',authMiddlewareBrand, async(req, res)=>{
+        const brand = req.brandId;
+        const postId = req.query.postId;
+        const allPost = await Post.find({
+            $and: [
+                {createdBy: brand}, 
+                {_id: postId}
+            ]
+        });
+        if(!allPost){
+            res.status(401).send("Dont have access to this task / No POST ! !")
+        }
+        res.status(201).json(allPost);
+    })    
 export default router; 
