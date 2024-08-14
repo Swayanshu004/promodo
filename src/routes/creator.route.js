@@ -1,6 +1,9 @@
 import express from "express"
-import {Creator} from "../models/creator.model.js"
+import { Creator } from "../models/creator.model.js"
+import { Post } from "../models/post.model.js";
+import { postRequest } from "../models/postRequest.model.js";
 import jwt from "jsonwebtoken";
+import { authMiddlewareCreator } from "../middlewares/authorization.js";
 
 
 const router = express.Router();
@@ -34,13 +37,29 @@ router
                 password
             })
             const token = jwt.sign({
-                userId: creator.id,
-            }, process.env.JWT_SECRET)
+                creatorId: creator.id,
+            }, process.env.JWT_SECRET_CREATOR)
 
             res.json({token});
         }
     })
 router
-    .
+    .post('/request/:postId',authMiddlewareCreator, async (req, res)=>{
+        const postrequest = await postRequest.create({
+            note: "Hii i'm swayanshu",
+            createdBy: req.creatorId,
+            requestdOn: req.params.postId,
+        })
+        if(!postrequest){
+            res.status(401).send("error in postRequest - try again leter ! !")
+        }
+
+        const post = await Post.find({_id: req.params.postId});
+        
+        const updatedCreator = await Creator.updateOne({_id: req.creatorId}, {$inc: { pendingAmount: post[0].pricepoll}});
+        res.status(201).send(updatedCreator);
+    })
+router
+    .get('/balance')
 
 export default router; 

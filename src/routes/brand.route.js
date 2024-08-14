@@ -71,7 +71,8 @@ router
             contentType,
             description,
             createdBy,
-            pricepoll
+            pricepoll,
+            autoaccept: true,
         })
         res.json({post})
     })

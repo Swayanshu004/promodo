@@ -38,6 +38,10 @@ const postSchema = new Schema({
         //  per promotion
         type: Number,
         required: true,
+    },
+    autoaccept: {
+        type: Boolean,
+        default: false,
     }
 },{
     timestamps: true

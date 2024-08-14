@@ -36,6 +36,14 @@ const creatorSchema = new Schema(
             type: String,
             required: [true , "password is required"],
         },
+        balance: {
+            type: Number,
+            default: 0,
+        },
+        pendingAmount: {
+            type: Number,
+            default: 0
+        }
     }
 )
 creatorSchema.pre("save" , async function(next){ 

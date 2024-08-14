@@ -16,18 +16,20 @@ function authMiddlewareBrand(req, res, next){
     }
 }
 function authMiddlewareCreator(req, res, next){
-    const authHeader = req.headers("authorization") || "";
+    const authHeader = req.header("authorization") || "";
     try {
-        const decoded = jwt.verify(authHeader,process.env.JWT_SECRET_CREATOR);
-        console.log(decoded);
-        if(decoded.brandId){
-            res.brandId = decoded.brandId;
+        console.log("authHeader - ",authHeader);
+        console.log("jwt - ",process.env.JWT_SECRET_CREATOR);
+        const decodedCreator = jwt.verify(authHeader, process.env.JWT_SECRET_CREATOR);
+        console.log("decoded - ",decodedCreator);
+        if(decodedCreator.creatorId){
+            req.creatorId = decodedCreator.creatorId;
             return next();
         } else {
-            return res.status(401),json({mesasage: "no brand found ! !"});
+            return res.status(401).json({mesasage: "no creator found ! "});
         }
     } catch (error) {
-        return res.status(401),json({mesasage: "no brand found ! !"});
+        return res.status(401).json({mesasage: "no creator found ! !"});
     }
 }
 
