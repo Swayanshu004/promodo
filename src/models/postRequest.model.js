@@ -11,7 +11,7 @@ const postRequestSchema = new Schema({
     requestdOn: {
         type: Schema.Types.ObjectId,
         ref: "post"
-    }
+    },
 },{
     timestamps: true
 });
