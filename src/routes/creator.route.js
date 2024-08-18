@@ -60,30 +60,5 @@ router
         const updatedCreator = await Creator.updateOne({_id: req.creatorId}, {$inc: { pendingAmount: post[0].pricepoll}});
         res.status(201).send(updatedCreator);
     })
-router
-    .get('/balance/:postId', authMiddlewareCreator, async(req, res)=> {
-        const creatorId = req.creatorId;
-        const creator = await Creator.find({_id: creatorId});
-        const post = await Post.find({_id: req.params.postId});
-        if(!creator){
-            res.status(401),send("Creator not loggedIn");
-        }
-        if(!post){
-            res.status(401),send("post not valid");
-        }
-        const updatedCreator = creator.update(
-            {_id: req.creatorId},
-            {
-                $inc: { pendingAmount: -post[0].pricepoll},
-                $inc: { balanceAmount: post[0].pricepoll}
-            }
-        )
-        const transaction = await Transaction.create({
-            userId: "66bd04a6d65f87fd8ac17409",
-            amount: 500,
-            signature: "0XsomethingXYZ",
-        })
-        res.status(201).send(updatedCreator, transaction);
-    })
 
 export default router; 

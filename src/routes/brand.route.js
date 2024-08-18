@@ -1,6 +1,8 @@
 import express from "express"
 import {Brand} from "../models/brand.model.js"
 import {Post} from "../models/post.model.js"
+import { Creator } from "../models/creator.model.js";
+import { Transaction } from "../models/transaction.model.js";
 import { upload } from "../middlewares/multer.middlewares.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import jwt from "jsonwebtoken";
@@ -90,5 +92,29 @@ router
             res.status(401).send("Dont have access to this task / No POST ! !")
         }
         res.status(201).json(allPost);
+    }) 
+router
+    .get('/approve/:postId', authMiddlewareBrand, async(req, res)=> {
+        const creator = await Creator.find({_id: req.params.creatorId});
+        const post = await Post.find({_id: req.params.postId});
+        if(!creator){
+            res.status(401),send("Creator not loggedIn");
+        }
+        if(!post){
+            res.status(401),send("post not valid");
+        }
+        const updatedCreator = creator.update(
+            {_id: req.creatorId},
+            {
+                $inc: { pendingAmount: -post[0].pricepoll},
+                $inc: { balanceAmount: post[0].pricepoll}
+            }
+        )
+        const transaction = await Transaction.create({
+            userId: "66bd04a6d65f87fd8ac17409",
+            amount: post[0].pricepoll,
+            signature: "0XsomethingXYZ",
+        })
+        res.status(201).send(updatedCreator, transaction);
     })    
 export default router; 

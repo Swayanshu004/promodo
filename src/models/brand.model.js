@@ -20,7 +20,8 @@ const brandSchema = new Schema(
         },
         category: {
             type:  String,
-            required: true
+            enum: ["NaN","Lifestyle","Fashion","Beauty","Fitness","Tech","Travel","Food","Gaming","Educational","Parenting"],
+            default: "NaN"
         },
         postHistory: [
             {

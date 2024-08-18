@@ -24,7 +24,8 @@ const creatorSchema = new Schema(
         },
         category: {
             type:  String,
-            required: true,
+            enum: ["NaN","Lifestyle","Fashion","Beauty","Fitness","Tech","Travel","Food","Gaming","Educational","Parenting"],
+            default: "NaN"
         },
         colabHistory: [
             {
@@ -44,6 +45,8 @@ const creatorSchema = new Schema(
             type: Number,
             default: 0
         }
+    }, {
+        timestamps: true
     }
 )
 creatorSchema.pre("save" , async function(next){ 
