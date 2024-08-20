@@ -14,18 +14,21 @@ const postSchema = new Schema({
     },
     category: {
         //  Beauty, sports, tech, finanace... etc.
-        type: String,
-        required: true
+        type:  String,
+        enum: ["NaN","Lifestyle","Fashion","Beauty","Fitness","Tech","Travel","Food","Gaming","Educational","Parenting"],
+        default: "NaN"
     }, 
     creatorType: {
-        //  Beginner, modrate, pro
-        type: String,
-        required: true
+        //  Beginner, Intermediate, Advance
+        type:  String,
+        enum: ["NaN","Beginner","Intermediate","Advance"],
+        default: "NaN"
     }, 
     contentType: {
-        //  sort(30-120 sec), long(>5min)
-        type: String,
-        required: true
+        //  Short(30-120 sec), Long(>5min)
+        type:  String,
+        enum: ["NaN","Long","Short"],
+        default: "NaN"
     }, 
     description: {
         type: String,
@@ -34,7 +37,7 @@ const postSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: "Brand"
     },
-    pricepoll: {
+    price: {
         //  per promotion
         type: Number,
         required: true,

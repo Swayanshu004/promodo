@@ -13,58 +13,45 @@ import { authMiddlewareBrand } from "../middlewares/authorization.js";
 const router = express.Router();
 router
     .post('/signin', async (req, res)=>{
-        // const {name, officialURL, category, password} = req.body;\
-        const name = "swayanshu";
-        const officialUrl = "officialURL.com";
-        const category = "beauty";
-        const password = "swayanshu123";
-
-        const alletAddress = "I-Am-A-Wallet-Address";
+        const {name, officialUrl, address, category, password} = req.body;
         const existedBrand = await Brand.findOne({
-            $or: [{ address: alletAddress }]
+            $or: [{ address }]
         })
         if(existedBrand){
             const token = jwt.sign({
-                brandId: existedBrand.id,
+                userId: existedBrand.id,
             }, process.env.JWT_SECRET)
-
             res.json({token});
         } else {
             const brand = await Brand.create({
                 name,
-                address: alletAddress,
+                address,
                 officialUrl,
                 category,
                 password
             })
             const token = jwt.sign({
-                brandId: brand.id,
+                userId: brand.id,
             }, process.env.JWT_SECRET)
 
-            res.json({token});
+            res.send(token);
         }
     })
 router
-    .post('/newpost',upload.single("ImageUrl"), async(req,res)=>{
+    .post('/newpost',upload.single('ImageUrl'), async(req,res)=>{
         let imageLocalPath;
-        // console.log("req.files - ",req.file);
-        if(req.file){
-            // console.log("Cover File Inside - ",req.files.coverImage[0]);
+        console.log(req.file);
+        
+        try {
             imageLocalPath = req.file.path;
-        } else {
-            console.log("no image found in req");
+        } catch (error) {
+            console.error("no image found in req - ",error);
         }
         const cloudinaryLink = await uploadOnCloudinary(imageLocalPath);
-        // console.log(imagelink);
+        console.log(cloudinaryLink);
         
-        const title = "newPost-Demo";
+        const {title, category ,creatorType, contentType, description, price, accept} = req.body;
         const ImageUrl = cloudinaryLink.url;
-        const category = "Beauty";
-        const creatorType = "pro";
-        const contentType = "sort";
-        const description = "this is a new Product";
-        const createdBy = req.body.id;
-        const pricepoll = 500;
 
         const post = await Post.create({
             title,
@@ -73,11 +60,11 @@ router
             creatorType,
             contentType,
             description,
-            createdBy,
-            pricepoll,
-            autoaccept: true,
+            createdBy: "66c4b5e967e8fb483f0f412e",
+            price,
+            accept,
         })
-        res.json({post})
+        res.status(201).send("created");
     })
 router
     .get('/profile', authMiddlewareBrand, async(req,res)=>{
@@ -145,6 +132,6 @@ router
                 $set: { approved: true }
             }
         )
-        res.status(201).send(updatedCreator, transaction, updateRequest);
+        res.status(201).send("updated");
     })    
 export default router; 

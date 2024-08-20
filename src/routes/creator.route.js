@@ -4,22 +4,15 @@ import { Post } from "../models/post.model.js";
 import { postRequest } from "../models/postRequest.model.js";
 import jwt from "jsonwebtoken";
 import { authMiddlewareCreator } from "../middlewares/authorization.js";
-import { Transaction } from "../models/transaction.model.js";
 
 
 const router = express.Router();
 router
     .post('/signin', async (req, res)=>{
-        // const {name, socialURl1, socialURL2, phone, category, password} = req.body;
-        const name = "Amit";
-        const instagramUrl = "igurl.com";
-        const youtubeUrl = "yt.com";
-        const phoneNo = 23454445;
-        const category = "influencer";
-        const password = "amit123"
-        const alletAddress = "I-Am-A-Wallet-Address";
+        console.log(req);
+        const {name, address, instagramUrl, youtubeUrl, phoneNo, category, password} = req.body;
         const existedUser = await Creator.findOne({
-            $or: [{ address: alletAddress }]
+            $or: [{ address: address }]
         })
         if(existedUser){
             const token = jwt.sign({
@@ -30,7 +23,7 @@ router
         } else {
             const creator = await Creator.create({
                 name,
-                address: alletAddress,
+                address,
                 instagramUrl,
                 youtubeUrl,
                 phoneNo,
@@ -38,17 +31,22 @@ router
                 password
             })
             const token = jwt.sign({
-                creatorId: creator.id,
+                userId: creator.id,
             }, process.env.JWT_SECRET_CREATOR)
 
-            res.json({token});
+            res.redirect(201, 'http://localhost:3000/Creator');
         }
     })
 router
-    .post('/request/:postId',authMiddlewareCreator, async (req, res)=>{
+    .post('/request/:postId', async(req, res)=>{
+        console.log(req.body);
+        const {note} = req.body;
+        if(!note){
+            res.status(401).send("Note is required")
+        }
         const postrequest = await postRequest.create({
-            note: "Hii i'm swayanshu",
-            createdBy: req.creatorId,
+            note,
+            createdBy: "66c4b184f902930284f12e5e",
             requestdOn: req.params.postId,
         })
         if(!postrequest){
@@ -56,8 +54,8 @@ router
         }
 
         const post = await Post.find({_id: req.params.postId});
-        
-        const updatedCreator = await Creator.updateOne({_id: req.creatorId}, {$inc: { pendingAmount: post[0].pricepoll}});
+
+        const updatedCreator = await Creator.updateOne({_id: req.creatorId}, {$inc: { pendingAmount: post[0].price}});
         res.status(201).send(updatedCreator);
     })
 router
@@ -69,7 +67,7 @@ router
         res.status(201).json(allpost);
     })
 router
-    .get('/post',authMiddlewareCreator, async(req, res)=>{
+    .get('/post/:postId', async(req, res)=>{
         const postId = req.query.postId;
         const postDetails = await Post.find({_id: postId});
         if(!postDetails){
