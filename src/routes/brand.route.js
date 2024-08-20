@@ -80,7 +80,7 @@ router
         res.json({post})
     })
 router
-    .post('/profile', async(req,res)=>{
+    .get('/profile', authMiddlewareBrand, async(req,res)=>{
         const brandId = req.query.brandId;
         const brandDetails = await Brand.find({
             _id: brandId
@@ -118,7 +118,7 @@ router
         res.status(201).json(postDetails, allRequest);
     }) 
 router
-    .get('/approve/:postId', authMiddlewareBrand, async(req, res)=> {
+    .post('/approve/:postId', authMiddlewareBrand, async(req, res)=> {
         const creator = await Creator.find({_id: req.params.creatorId});
         const post = await Post.find({_id: req.params.postId});
         if(!creator){

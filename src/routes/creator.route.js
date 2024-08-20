@@ -60,5 +60,30 @@ router
         const updatedCreator = await Creator.updateOne({_id: req.creatorId}, {$inc: { pendingAmount: post[0].pricepoll}});
         res.status(201).send(updatedCreator);
     })
-
+router
+    .get('/allpost', authMiddlewareCreator, async (req, res)=>{
+        const allpost = await Post.find();
+        if(!allpost){
+            res.status(401).send("No Active Post At This Time")
+        }
+        res.status(201).json(allpost);
+    })
+router
+    .get('/post',authMiddlewareCreator, async(req, res)=>{
+        const postId = req.query.postId;
+        const postDetails = await Post.find({_id: postId});
+        if(!postDetails){
+            res.status(401).send("Dont have access to this task / No POST ! !")
+        }
+        res.status(201).json(postDetails);
+    })
+router
+    .get('/profile',authMiddlewareCreator, async(req, res)=>{
+        const creatorId = req.creatorId;
+        const creatorDetails = await Creator.find({_id: creatorId});
+        if(!creatorDetails){
+            res.status(401).send("Dont have any Creator with ihis ID")
+        }
+        res.status(201).json(creatorDetails);
+    })
 export default router; 
