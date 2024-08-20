@@ -2,6 +2,7 @@ import express from "express"
 import {Brand} from "../models/brand.model.js"
 import {Post} from "../models/post.model.js"
 import { Creator } from "../models/creator.model.js";
+import { postRequest } from "../models/postRequest.model.js";
 import { Transaction } from "../models/transaction.model.js";
 import { upload } from "../middlewares/multer.middlewares.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
@@ -79,31 +80,54 @@ router
         res.json({post})
     })
 router
+    .post('/profile', async(req,res)=>{
+        const brandId = req.query.brandId;
+        const brandDetails = await Brand.find({
+            _id: brandId
+        })
+        const allPost = await Post.find({
+            createdBy: brandId
+        })
+        if(!brandDetails){
+            res.status(401).send("No Brand Exists With This ID.")
+        }
+        if(!allPost){
+            res.status(401).send("No POST Associated With This Brand.")
+        }
+        res.status(201).json(allPost, brandDetails)
+    })
+router
     .get('/post',authMiddlewareBrand, async(req, res)=>{
         const brand = req.brandId;
         const postId = req.query.postId;
-        const allPost = await Post.find({
+        const postDetails = await Post.find({
             $and: [
                 {createdBy: brand}, 
                 {_id: postId}
             ]
         });
-        if(!allPost){
+        const allRequest = await postRequest.find({
+            requestdOn: postId
+        });
+        if(!postDetails){
             res.status(401).send("Dont have access to this task / No POST ! !")
         }
-        res.status(201).json(allPost);
+        if(!allRequest){
+            res.status(401).send("Dont have access to All Request ! !")
+        }
+        res.status(201).json(postDetails, allRequest);
     }) 
 router
     .get('/approve/:postId', authMiddlewareBrand, async(req, res)=> {
         const creator = await Creator.find({_id: req.params.creatorId});
         const post = await Post.find({_id: req.params.postId});
         if(!creator){
-            res.status(401),send("Creator not loggedIn");
+            res.status(401),send("Creator not Found");
         }
         if(!post){
-            res.status(401),send("post not valid");
+            res.status(401),send("postId not valid");
         }
-        const updatedCreator = creator.update(
+        const updatedCreator = await creator.update(
             {_id: req.creatorId},
             {
                 $inc: { pendingAmount: -post[0].pricepoll},
@@ -115,6 +139,12 @@ router
             amount: post[0].pricepoll,
             signature: "0XsomethingXYZ",
         })
-        res.status(201).send(updatedCreator, transaction);
+        const updateRequest = await postRequest.update(
+            {requestdOn: req.req.params.postId},
+            {
+                $set: { approved: true }
+            }
+        )
+        res.status(201).send(updatedCreator, transaction, updateRequest);
     })    
 export default router; 

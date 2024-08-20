@@ -12,6 +12,10 @@ const postRequestSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: "post"
     },
+    approved: {
+        type: Boolean,
+        default: false
+    },
 },{
     timestamps: true
 });
