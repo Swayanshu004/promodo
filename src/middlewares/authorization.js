@@ -4,8 +4,8 @@ function authMiddlewareBrand(req, res, next){
     const authHeader = req.header("authorization") || "";
     try {
         const decoded = jwt.verify(authHeader,process.env.JWT_SECRET);
-        console.log(decoded);
-        if(decoded.brandId){
+        // console.log(decoded);
+        if(decoded.userId){
             req.brandId = decoded.brandId;
             return next();
         } else {
@@ -16,12 +16,12 @@ function authMiddlewareBrand(req, res, next){
     }
 }
 function authMiddlewareCreator(req, res, next){
-    const authHeader = req.header("authorization") || "";
+    const authHeader = req.headers["authorization"] || "";
     try {
         const decodedCreator = jwt.verify(authHeader, process.env.JWT_SECRET_CREATOR);
-        console.log("decoded - ",decodedCreator);
-        if(decodedCreator.creatorId){
-            req.creatorId = decodedCreator.creatorId;
+        // console.log("decoded - ",decodedCreator);
+        if(decodedCreator.userId){
+            req.creatorId = decoded.creatorId;
             return next();
         } else {
             return res.status(401).json({mesasage: "no creator found ! "});

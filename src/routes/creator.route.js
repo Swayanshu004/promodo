@@ -16,10 +16,10 @@ router
         })
         if(existedUser){
             const token = jwt.sign({
-                userId: existedUser.id,
+                creatorId: existedUser.id,
             }, process.env.JWT_SECRET)
-
-            res.json({token});
+            
+            res.status(201).json({token});
         } else {
             const creator = await Creator.create({
                 name,
@@ -31,14 +31,15 @@ router
                 password
             })
             const token = jwt.sign({
-                userId: creator.id,
+                creatorId: creator.id,
             }, process.env.JWT_SECRET_CREATOR)
 
-            res.redirect(201, 'http://localhost:3000/Creator');
+            
+            res.status(201).json({token});
         }
     })
 router
-    .post('/request/:postId', async(req, res)=>{
+    .post('/request/:postId', authMiddlewareCreator, async(req, res)=>{
         console.log(req.body);
         const {note} = req.body;
         if(!note){
@@ -46,20 +47,24 @@ router
         }
         const postrequest = await postRequest.create({
             note,
-            createdBy: "66c4b184f902930284f12e5e",
+            createdBy: req.creatorId,
             requestdOn: req.params.postId,
         })
         if(!postrequest){
             res.status(401).send("error in postRequest - try again leter ! !")
         }
-
         const post = await Post.find({_id: req.params.postId});
-
+        if(!post){
+            res.status(401).send("error in post - no post found ! !")
+        }
+        
         const updatedCreator = await Creator.updateOne({_id: req.creatorId}, {$inc: { pendingAmount: post[0].price}});
-        res.status(201).send(updatedCreator);
+        res.status(201).json({updatedCreator});
     })
 router
     .get('/allpost', authMiddlewareCreator, async (req, res)=>{
+        console.log("all post route");
+        
         const allpost = await Post.find();
         if(!allpost){
             res.status(401).send("No Active Post At This Time")
@@ -67,8 +72,8 @@ router
         res.status(201).json(allpost);
     })
 router
-    .get('/post/:postId', async(req, res)=>{
-        const postId = req.query.postId;
+    .get('/post/:postId', authMiddlewareCreator, async(req, res)=>{
+        const postId = req.params.postId;
         const postDetails = await Post.find({_id: postId});
         if(!postDetails){
             res.status(401).send("Dont have access to this task / No POST ! !")
@@ -78,10 +83,16 @@ router
 router
     .get('/profile',authMiddlewareCreator, async(req, res)=>{
         const creatorId = req.creatorId;
+        // console.log("creatorId - ",creatorId);
+        
         const creatorDetails = await Creator.find({_id: creatorId});
+        const requestFromCreator = await postRequest.find({createdBy: creatorId});
         if(!creatorDetails){
             res.status(401).send("Dont have any Creator with ihis ID")
         }
-        res.status(201).json(creatorDetails);
+        if(!requestFromCreator){
+            res.status(401).send("Dont have any request with ihis creatorId")
+        }
+        res.status(201).json({creatorDetails, requestFromCreator});
     })
 export default router; 

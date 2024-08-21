@@ -15,13 +15,13 @@ router
     .post('/signin', async (req, res)=>{
         const {name, officialUrl, address, category, password} = req.body;
         const existedBrand = await Brand.findOne({
-            $or: [{ address }]
+            $or: [{ address: address }]
         })
         if(existedBrand){
             const token = jwt.sign({
-                userId: existedBrand.id,
+                brandId: existedBrand.id,
             }, process.env.JWT_SECRET)
-            res.json({token});
+            res.status(201).json({token});
         } else {
             const brand = await Brand.create({
                 name,
@@ -31,10 +31,10 @@ router
                 password
             })
             const token = jwt.sign({
-                userId: brand.id,
+                brandId: brand.id,
             }, process.env.JWT_SECRET)
-
-            res.send(token);
+            
+            res.status(201).json({token});
         }
     })
 router
@@ -50,12 +50,13 @@ router
         const cloudinaryLink = await uploadOnCloudinary(imageLocalPath);
         console.log(cloudinaryLink);
         
-        const {title, category ,creatorType, contentType, description, price, accept} = req.body;
+        const {title, category ,productUrl, creatorType, contentType, description, price, accept} = req.body;
         const ImageUrl = cloudinaryLink.url;
 
         const post = await Post.create({
             title,
             ImageUrl,
+            productUrl,
             category,
             creatorType,
             contentType,
@@ -68,7 +69,7 @@ router
     })
 router
     .get('/profile', authMiddlewareBrand, async(req,res)=>{
-        const brandId = req.query.brandId;
+        const brandId = req.brandId;
         const brandDetails = await Brand.find({
             _id: brandId
         })
@@ -81,7 +82,7 @@ router
         if(!allPost){
             res.status(401).send("No POST Associated With This Brand.")
         }
-        res.status(201).json(allPost, brandDetails)
+        res.status(201).json(brandDetails, allPost)
     })
 router
     .get('/post',authMiddlewareBrand, async(req, res)=>{

@@ -23,12 +23,6 @@ const brandSchema = new Schema(
             enum: ["NaN","Lifestyle","Fashion","Beauty","Fitness","Tech","Travel","Food","Gaming","Educational","Parenting"],
             default: "NaN"
         },
-        postHistory: [
-            {
-                type: Schema.Types.ObjectId,
-                ref: "Post",
-            }
-        ],
         password: {
             type: String,
             required: [true , "password is required"],
