@@ -23,9 +23,9 @@ function authMiddlewareCreator(req, res, next){
     const authHeader = req.headers["authorization"] || "";
     try {
         const decodedCreator = jwt.verify(authHeader, process.env.JWT_SECRET_CREATOR);
-        // console.log("decoded - ",decodedCreator);
-        if(decodedCreator.userId){
-            req.creatorId = decoded.creatorId;
+        // console.log("decoded - ",process.env.JWT_SECRET_CREATOR);
+        if(decodedCreator.creatorId){
+            req.creatorId = decodedCreator.creatorId;
             return next();
         } else {
             return res.status(401).json({mesasage: "no creator found ! "});

@@ -1,4 +1,6 @@
 import express from "express"
+import nacl from "tweetnacl";
+import { Connection, PublicKey, Transaction } from "@solana/web3.js";
 import { Creator } from "../models/creator.model.js"
 import { Post } from "../models/post.model.js";
 import { postRequest } from "../models/postRequest.model.js";
@@ -9,21 +11,32 @@ import { authMiddlewareCreator } from "../middlewares/authorization.js";
 const router = express.Router();
 router
     .post('/signin', async (req, res)=>{
-        console.log(req);
-        const {name, address, instagramUrl, youtubeUrl, phoneNo, category, password} = req.body;
+        // console.log(req.body);
+        const {name, publicKey, instagramUrl, youtubeUrl, phoneNo, category, password, signature} = req.body;
+        const message = new TextEncoder().encode("Sign into easyPROMO");
+        const result = nacl.sign.detached.verify(
+            message,
+            new Uint8Array(signature.data),
+            new PublicKey(publicKey).toBytes(),
+        );
+        console.log(result);
+        if(!result){
+            res.status(401).send("unverified Wallet Details.")
+        }
+
         const existedUser = await Creator.findOne({
-            $or: [{ address: address }]
+            $or: [{ address: publicKey }]
         })
         if(existedUser){
             const token = jwt.sign({
                 creatorId: existedUser.id,
-            }, process.env.JWT_SECRET)
+            }, process.env.JWT_SECRET_CREATOR)
             
             res.status(201).json({token});
         } else {
             const creator = await Creator.create({
                 name,
-                address,
+                address: publicKey,
                 instagramUrl,
                 youtubeUrl,
                 phoneNo,
@@ -63,8 +76,6 @@ router
     })
 router
     .get('/allpost', authMiddlewareCreator, async (req, res)=>{
-        console.log("all post route");
-        
         const allpost = await Post.find();
         if(!allpost){
             res.status(401).send("No Active Post At This Time")
