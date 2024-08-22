@@ -33,7 +33,7 @@ router
             const token = jwt.sign({
                 brandId: brand.id,
             }, process.env.JWT_SECRET)
-            
+
             res.status(201).json({token});
         }
     })
@@ -69,6 +69,8 @@ router
     })
 router
     .get('/profile', authMiddlewareBrand, async(req,res)=>{
+        console.log("reached /profile");
+        
         const brandId = req.brandId;
         const brandDetails = await Brand.find({
             _id: brandId
@@ -82,32 +84,32 @@ router
         if(!allPost){
             res.status(401).send("No POST Associated With This Brand.")
         }
-        res.status(201).json(brandDetails, allPost)
+        res.status(201).json({brandDetails, allPost})
     })
 router
-    .get('/post',authMiddlewareBrand, async(req, res)=>{
-        const brand = req.brandId;
-        const postId = req.query.postId;
-        const postDetails = await Post.find({
-            $and: [
-                {createdBy: brand}, 
-                {_id: postId}
-            ]
-        });
+    .get('/post/:postId',authMiddlewareBrand, async(req, res)=>{
+        const postId = req.params.postId;
+        const postDetails = await Post.find({_id: postId});
+        if(!postDetails){
+            res.status(401).send("Dont have access to this POST ! !")
+        }
         const allRequest = await postRequest.find({
             requestdOn: postId
         });
         if(!postDetails){
-            res.status(401).send("Dont have access to this task / No POST ! !")
+            res.status(401).send("Dont have access to this No POST ! !")
         }
         if(!allRequest){
             res.status(401).send("Dont have access to All Request ! !")
         }
-        res.status(201).json(postDetails, allRequest);
+        res.status(201).json({postDetails, allRequest});
     }) 
 router
     .post('/approve/:postId', authMiddlewareBrand, async(req, res)=> {
-        const creator = await Creator.find({_id: req.params.creatorId});
+        console.log(req.query.creatorId);
+        console.log(req.params.postId);
+        
+        const creator = await Creator.find({_id: req.query.creatorId});
         const post = await Post.find({_id: req.params.postId});
         if(!creator){
             res.status(401),send("Creator not Found");
@@ -115,24 +117,24 @@ router
         if(!post){
             res.status(401),send("postId not valid");
         }
-        const updatedCreator = await creator.update(
-            {_id: req.creatorId},
+        const updatedCreator = await Creator.findOneAndUpdate(
+            {_id: req.query.creatorId},
             {
-                $inc: { pendingAmount: -post[0].pricepoll},
-                $inc: { balanceAmount: post[0].pricepoll}
+                $inc: { pendingAmount: -post[0].price},
+                $inc: { balance: post[0].price}
             }
         )
         const transaction = await Transaction.create({
-            userId: "66bd04a6d65f87fd8ac17409",
-            amount: post[0].pricepoll,
+            userId: req.query.creatorId,
+            amount: post[0].price,
             signature: "0XsomethingXYZ",
         })
-        const updateRequest = await postRequest.update(
-            {requestdOn: req.req.params.postId},
+        const updateRequest = await postRequest.findOneAndUpdate(
+            {requestdOn: req.params.postId},
             {
                 $set: { approved: true }
             }
         )
-        res.status(201).send("updated");
+        res.status(201).json({updatedCreator, updateRequest, transaction});
     })    
 export default router; 

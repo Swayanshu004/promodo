@@ -2,13 +2,17 @@ import jwt from "jsonwebtoken";
 
 function authMiddlewareBrand(req, res, next){
     const authHeader = req.header("authorization") || "";
+    // console.log(authHeader);
     try {
         const decoded = jwt.verify(authHeader,process.env.JWT_SECRET);
         // console.log(decoded);
-        if(decoded.userId){
+        if(decoded.brandId){
             req.brandId = decoded.brandId;
+            // console.log("success");
+            
             return next();
         } else {
+            // console.log("fail");
             return res.status(401).json({mesasage: "no brand found ! !"});
         }
     } catch (error) {
