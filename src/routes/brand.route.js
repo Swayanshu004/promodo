@@ -1,9 +1,11 @@
 import express from "express"
+import nacl from "tweetnacl";
+import { Connection, PublicKey, Transaction } from "@solana/web3.js";
 import {Brand} from "../models/brand.model.js"
 import {Post} from "../models/post.model.js"
 import { Creator } from "../models/creator.model.js";
 import { postRequest } from "../models/postRequest.model.js";
-import { Transaction } from "../models/transaction.model.js";
+import { Transact } from "../models/transaction.model.js"
 import { upload } from "../middlewares/multer.middlewares.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import jwt from "jsonwebtoken";
@@ -13,9 +15,23 @@ import { authMiddlewareBrand } from "../middlewares/authorization.js";
 const router = express.Router();
 router
     .post('/signin', async (req, res)=>{
-        const {name, officialUrl, address, category, password} = req.body;
+        console.log(req.body);
+        const {name, officialUrl, publicKey, category, password, signature} = req.body;
+        console.log(publicKey," - ",signature);
+        
+        const message = new TextEncoder().encode("Sign into easyPROMO");
+        const result = nacl.sign.detached.verify(
+            message,
+            new Uint8Array(signature.data),
+            new PublicKey(publicKey).toBytes(),
+        );
+        console.log(result);
+        if(!result){
+            res.status(401).send("unverified Wallet Details.")
+        }
+
         const existedBrand = await Brand.findOne({
-            $or: [{ address: address }]
+            $or: [{ address: publicKey }]
         })
         if(existedBrand){
             const token = jwt.sign({
@@ -25,7 +41,7 @@ router
         } else {
             const brand = await Brand.create({
                 name,
-                address,
+                address: publicKey,
                 officialUrl,
                 category,
                 password
@@ -50,8 +66,12 @@ router
         const cloudinaryLink = await uploadOnCloudinary(imageLocalPath);
         console.log(cloudinaryLink);
         
-        const {title, category ,productUrl, creatorType, contentType, description, price, accept} = req.body;
+        const {title, category ,productUrl, creatorType, contentType, description, price, accept, signature} = req.body;
         const ImageUrl = cloudinaryLink.url;
+        if(!signature){
+            res.status(401).send("post is not signed by any user")
+        }
+        console.log(signature);
 
         const post = await Post.create({
             title,
@@ -124,7 +144,7 @@ router
                 $inc: { balance: post[0].price}
             }
         )
-        const transaction = await Transaction.create({
+        const transaction = await Transact.create({
             userId: req.query.creatorId,
             amount: post[0].price,
             signature: "0XsomethingXYZ",

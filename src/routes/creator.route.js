@@ -47,7 +47,6 @@ router
                 creatorId: creator.id,
             }, process.env.JWT_SECRET_CREATOR)
 
-            
             res.status(201).json({token});
         }
     })
