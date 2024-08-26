@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 
 function authMiddlewareBrand(req, res, next){
-    const authHeader = req.header("authorization") || "";
+    const authHeader = req.header("authorization") || req.query.brandJwt;
     // console.log(authHeader);
     try {
         const decoded = jwt.verify(authHeader,process.env.JWT_SECRET);

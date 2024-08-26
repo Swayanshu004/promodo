@@ -13,7 +13,8 @@ router
     .post('/signin', async (req, res)=>{
         // console.log(req.body);
         const {name, publicKey, instagramUrl, youtubeUrl, phoneNo, category, password, signature} = req.body;
-        const message = new TextEncoder().encode("Sign into easyPROMO");
+        const message = new TextEncoder().encode("Sign into easyPROMO-CREATOR");
+        console.log(publicKey," - ",signature);
         const result = nacl.sign.detached.verify(
             message,
             new Uint8Array(signature.data),
@@ -36,7 +37,7 @@ router
         } else {
             const creator = await Creator.create({
                 name,
-                address: publicKey,
+                address: publicKeye,
                 instagramUrl,
                 youtubeUrl,
                 phoneNo,

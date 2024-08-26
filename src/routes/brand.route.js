@@ -1,6 +1,6 @@
 import express from "express"
 import nacl from "tweetnacl";
-import { Connection, PublicKey, Transaction } from "@solana/web3.js";
+import { Connection, PublicKey, Transaction, sendAndConfirmTransaction, Keypair, SystemProgram } from "@solana/web3.js";
 import {Brand} from "../models/brand.model.js"
 import {Post} from "../models/post.model.js"
 import { Creator } from "../models/creator.model.js";
@@ -9,8 +9,12 @@ import { Transact } from "../models/transaction.model.js"
 import { upload } from "../middlewares/multer.middlewares.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import jwt from "jsonwebtoken";
+import bs58 from "bs58";
 import { authMiddlewareBrand } from "../middlewares/authorization.js";
 
+console.log(process.env.RPC_URL);
+const connection = new Connection(process.env.RPC_URL);
+const PARENT_WALLET_ADDRESS = process.env.PARENT_WALLET_ADDRESS;
 
 const router = express.Router();
 router
@@ -54,25 +58,50 @@ router
         }
     })
 router
-    .post('/newpost',upload.single('ImageUrl'), async(req,res)=>{
+    .post('/newpost', upload.single('ImageUrl'), authMiddlewareBrand, async(req,res)=>{
         let imageLocalPath;
-        console.log(req.file);
-        
         try {
             imageLocalPath = req.file.path;
         } catch (error) {
             console.error("no image found in req - ",error);
         }
+        const brandId = req.brandId;
         const cloudinaryLink = await uploadOnCloudinary(imageLocalPath);
-        console.log(cloudinaryLink);
+        // console.log(cloudinaryLink);
         
-        const {title, category ,productUrl, creatorType, contentType, description, price, accept, signature} = req.body;
+        const {title, category ,productUrl, creatorType, contentType, description, price, accept, txSignature} = req.body;
+        const priceInLamport = price * 1_000_000_000;
         const ImageUrl = cloudinaryLink.url;
-        if(!signature){
+        if(!txSignature){
             res.status(401).send("post is not signed by any user")
         }
-        console.log(signature);
-
+        console.log("txSignature - ",txSignature);
+        
+        const transaction = await connection.getTransaction(txSignature, {
+            maxSupportedTransactionVersion: 1
+        })
+        console.log("tx - ",connection," - ",transaction);
+        if ((transaction?.meta?.postBalances[1] ?? 0) - (transaction?.meta?.preBalances[1] ?? 0) !== priceInLamport) {
+            return res.status(411).json({
+                message: "Transaction signature/amount incorrect"
+            })
+        }
+        
+        if (transaction?.transaction.message.getAccountKeys().get(1)?.toString() !== PARENT_WALLET_ADDRESS) {
+            return res.status(411).json({
+                message: "Transaction sent to wrong address"
+            })
+        }
+        
+        console.log("txSignature address - ",transaction?.transaction.message.getAccountKeys().get(1).toString());
+        console.log("PARENT_WALLET_ADDRESS - ",process.env.PARENT_WALLET_ADDRESS);
+        const check = (transaction?.transaction.message.getAccountKeys().get(1).toString() !== process.env.PARENT_WALLET_ADDRESS);
+        
+        if (check) {
+            return res.status(411).json({
+                message: "Transaction sent to wrong address"
+            })
+        }
         const post = await Post.create({
             title,
             ImageUrl,
@@ -81,11 +110,11 @@ router
             creatorType,
             contentType,
             description,
-            createdBy: "66c4b5e967e8fb483f0f412e",
+            createdBy: brandId,
             price,
             accept,
         })
-        res.status(201).send("created");
+        res.status(201).json({transaction, post});
     })
 router
     .get('/profile', authMiddlewareBrand, async(req,res)=>{
@@ -128,7 +157,7 @@ router
     .post('/approve/:postId', authMiddlewareBrand, async(req, res)=> {
         console.log(req.query.creatorId);
         console.log(req.params.postId);
-        
+
         const creator = await Creator.find({_id: req.query.creatorId});
         const post = await Post.find({_id: req.params.postId});
         if(!creator){
@@ -137,24 +166,56 @@ router
         if(!post){
             res.status(401),send("postId not valid");
         }
+        const postPrice = post[0].price;
         const updatedCreator = await Creator.findOneAndUpdate(
             {_id: req.query.creatorId},
             {
-                $inc: { pendingAmount: -post[0].price},
-                $inc: { balance: post[0].price}
+                $inc: { 
+                    pendingAmount: -postPrice ,
+                    balance: postPrice
+                },
             }
         )
-        const transaction = await Transact.create({
-            userId: req.query.creatorId,
-            amount: post[0].price,
-            signature: "0XsomethingXYZ",
-        })
-        const updateRequest = await postRequest.findOneAndUpdate(
+        const updatedRequest = await postRequest.findOneAndUpdate(
             {requestdOn: req.params.postId},
             {
                 $set: { approved: true }
             }
         )
-        res.status(201).json({updatedCreator, updateRequest, transaction});
+        
+        const tx = new Transaction().add(
+            SystemProgram.transfer({
+                fromPubkey: new PublicKey(PARENT_WALLET_ADDRESS),
+                toPubkey: new PublicKey(creator[0].address),
+                lamports: post[0].price * 1_000_000_000,
+            })
+        );
+        console.log("tx - ",tx);
+        const keypair = Keypair.fromSecretKey(bs58.decode(process.env.PARENT_WALLET_PRIVATE_KEY));
+        console.log("keypair - ",keypair);
+        let signature = "";
+        try {
+            signature = await sendAndConfirmTransaction(
+                connection,
+                tx,
+                [keypair],
+            );
+        } catch(e) {
+            return res.json({
+                message: "Transaction failed"
+            })
+        }
+        const transaction = await Transact.create({
+            userId: req.query.creatorId,
+            amount: post[0].price,
+            signature: signature,
+        })
+        
+        res.status(201).json({
+            message: "Pocessing",
+            transaction,
+            updatedRequest,
+            updatedCreator
+        });
     })    
 export default router; 
