@@ -75,7 +75,7 @@ router
         res.status(201).json({updatedCreator});
     })
 router
-    .get('/allpost', authMiddlewareCreator, async (req, res)=>{
+    .get('/allpost', async (req, res)=>{
         const allpost = await Post.find();
         if(!allpost){
             res.status(401).send("No Active Post At This Time")
