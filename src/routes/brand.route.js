@@ -12,7 +12,6 @@ import jwt from "jsonwebtoken";
 import bs58 from "bs58";
 import { authMiddlewareBrand } from "../middlewares/authorization.js";
 
-console.log(process.env.RPC_URL);
 const connection = new Connection(process.env.RPC_URL);
 const PARENT_WALLET_ADDRESS = process.env.PARENT_WALLET_ADDRESS;
 
