@@ -7,7 +7,7 @@ import cors from 'cors'
 
 const app = express()
 var corsOptions = {
-    origin: 'http://localhost:3000',
+    origin: 'https://promotionlink-server.onrender.com',
     methods: "GET, POST, PATCH, DELETE",
     credential: true
   }
