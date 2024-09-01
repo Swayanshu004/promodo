@@ -7,7 +7,7 @@ import cors from 'cors'
 
 const app = express()
 var corsOptions = {
-    origin: 'https://promotionlink-server.onrender.com',
+    origin: 'https://promotionlink.vercel.app',
     methods: "GET, POST, PATCH, DELETE",
     credential: true
   }
