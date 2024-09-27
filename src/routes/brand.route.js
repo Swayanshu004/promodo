@@ -57,14 +57,14 @@ router
         }
     })
 router
-    .post('/newpost', upload.single('ImageUrl'), authMiddlewareBrand, async(req,res)=>{
+    .post('/newpost', upload.single('ImageUrl'), async(req,res)=>{
         let imageLocalPath;
         try {
             imageLocalPath = req.file.path;
         } catch (error) {
             console.error("no image found in req - ",error);
         }
-        const brandId = req.brandId;
+        const brandId = '66c8994b3b20e9b74da374dc';
         const cloudinaryLink = await uploadOnCloudinary(imageLocalPath);
         // console.log(cloudinaryLink);
         
@@ -116,10 +116,10 @@ router
         res.status(201).json({transaction, post});
     })
 router
-    .get('/profile', authMiddlewareBrand, async(req,res)=>{
+    .get('/profile', async(req,res)=>{
         console.log("reached /profile");
         
-        const brandId = req.brandId;
+        const brandId = '66c8994b3b20e9b74da374dc';
         const brandDetails = await Brand.find({
             _id: brandId
         })
@@ -135,7 +135,7 @@ router
         res.status(201).json({brandDetails, allPost})
     })
 router
-    .get('/post/:postId', authMiddlewareBrand, async(req, res)=>{
+    .get('/post/:postId', async(req, res)=>{
         const postId = req.params.postId;
         const postDetails = await Post.find({_id: postId});
         if(!postDetails){
@@ -153,7 +153,7 @@ router
         res.status(201).json({postDetails, allRequest});
     }) 
 router
-    .post('/approve/:postId', authMiddlewareBrand, async(req, res)=> {
+    .post('/approve/:postId', async(req, res)=> {
         console.log(req.query.creatorId);
         console.log(req.params.postId);
 
