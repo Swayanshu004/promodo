@@ -57,7 +57,7 @@ router
         }
     })
 router
-    .post('/newpost', upload.single('ImageUrl'), authMiddlewareBrand, async(req,res)=>{
+    .post('/newpost', upload.single('ImageUrl'), async(req,res)=>{
         let imageLocalPath;
         try {
             imageLocalPath = req.file.path;
@@ -116,7 +116,7 @@ router
         res.status(201).json({transaction, post});
     })
 router
-    .get('/profile', authMiddlewareBrand, async(req,res)=>{
+    .get('/profile', async(req,res)=>{
         console.log("reached /profile");
         
         const brandId = req.brandId;
@@ -135,7 +135,7 @@ router
         res.status(201).json({brandDetails, allPost})
     })
 router
-    .get('/post/:postId',authMiddlewareBrand, async(req, res)=>{
+    .get('/post/:postId', async(req, res)=>{
         const postId = req.params.postId;
         const postDetails = await Post.find({_id: postId});
         if(!postDetails){
