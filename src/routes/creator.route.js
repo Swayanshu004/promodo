@@ -52,7 +52,7 @@ router
         }
     })
 router
-    .post('/request/:postId', async(req, res)=>{
+    .post('/request/:postId', authMiddlewareCreator, async(req, res)=>{
         console.log(req.body);
         const {note} = req.body;
         if(!note){
@@ -75,7 +75,7 @@ router
         res.status(201).json({updatedCreator});
     })
 router
-    .get('/allpost', async (req, res)=>{
+    .get('/allpost', authMiddlewareCreator, async (req, res)=>{
         const allpost = await Post.find();
         if(!allpost){
             res.status(401).send("No Active Post At This Time")
@@ -83,7 +83,7 @@ router
         res.status(201).json(allpost);
     })
 router
-    .get('/post/:postId', async(req, res)=>{
+    .get('/post/:postId', authMiddlewareCreator, async(req, res)=>{
         const postId = req.params.postId;
         const postDetails = await Post.find({_id: postId});
         if(!postDetails){
@@ -92,7 +92,7 @@ router
         res.status(201).json(postDetails);
     })
 router
-    .get('/profile', async(req, res)=>{
+    .get('/profile', authMiddlewareCreator, async(req, res)=>{
         const creatorId = req.creatorId;
         // console.log("creatorId - ",creatorId);
         
