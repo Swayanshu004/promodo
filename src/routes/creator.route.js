@@ -52,7 +52,7 @@ router
         }
     })
 router
-    .post('/request/:postId', authMiddlewareCreator, async(req, res)=>{
+    .post('/request/:postId', async(req, res)=>{
         console.log(req.body);
         const {note} = req.body;
         if(!note){
@@ -60,7 +60,7 @@ router
         }
         const postrequest = await postRequest.create({
             note,
-            createdBy: req.creatorId,
+            createdBy: '66c7a2ed090040139285667a',
             requestdOn: req.params.postId,
         })
         if(!postrequest){
@@ -75,7 +75,7 @@ router
         res.status(201).json({updatedCreator});
     })
 router
-    .get('/allpost', authMiddlewareCreator, async (req, res)=>{
+    .get('/allpost', async (req, res)=>{
         const allpost = await Post.find();
         if(!allpost){
             res.status(401).send("No Active Post At This Time")
@@ -92,8 +92,8 @@ router
         res.status(201).json(postDetails);
     })
 router
-    .get('/profile', authMiddlewareCreator, async(req, res)=>{
-        const creatorId = req.creatorId;
+    .get('/profile', async(req, res)=>{
+        const creatorId = '66c7a2ed090040139285667a';
         // console.log("creatorId - ",creatorId);
         
         const creatorDetails = await Creator.find({_id: creatorId});
