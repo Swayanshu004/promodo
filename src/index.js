@@ -6,12 +6,13 @@ import brandRoute from './routes/brand.route.js'
 import cors from 'cors'
 
 const app = express()
-var corsOptions = {
+const corsOptions = {
     origin: 'https://promotionlink.vercel.app',
     methods: "GET, POST, PATCH, DELETE",
     credential: true
   }
 app.use(cors(corsOptions))
+app.options('*', cors(corsOptions))
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
 
