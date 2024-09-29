@@ -6,12 +6,20 @@ import brandRoute from './routes/brand.route.js'
 import cors from 'cors'
 
 const app = express()
-var corsOptions = {
-    origin: 'http://localhost:3000',
+const corsOptions = {
+    origin: 'https://promotionlink.vercel.app',
     methods: "GET, POST, PATCH, DELETE",
     credential: true
   }
 app.use(cors(corsOptions))
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', 'https://promotionlink.vercel.app'); 
+  res.header('Access-Control-Allow-Credentials', 'true'); 
+  res.header('Access-Control-Allow-Methods', 'GET,POST,PATCH,DELETE');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization'); 
+  next();
+});
+app.options('*', cors(corsOptions))
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
 
@@ -29,4 +37,3 @@ connectDB()
 
 app.use("/v1/creator", creatorRoute)
 app.use("/v1/brand", brandRoute)
-
