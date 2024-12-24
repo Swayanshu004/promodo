@@ -10,6 +10,10 @@ import { authMiddlewareCreator } from "../middlewares/authorization.js";
 
 const router = express.Router();
 router
+    .get('/check', (req, res)=>{
+        res.status(200).send("check for upbot succeed");
+    })
+router
     .post('/signin', async (req, res)=>{
         // console.log(req.body);
         const {name, publicKey, instagramUrl, youtubeUrl, phoneNo, category, password, signature} = req.body;
